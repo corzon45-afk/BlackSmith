@@ -136,6 +136,139 @@
             `;
             grid.appendChild(card);
         });
+<script>
+    // --- 1. CONFIGURACIÓN ---
+    // ¡IMPORTANTE! Reemplaza con tu URL DE LA HOJA NUEVA
+    const SHEET_URL = "PEGAR_TU_URL_AQUI"; 
+    
+    let data = { pc: [], mob: [] };
+    let isLoading = true;
+
+    // --- 2. CARGAR Y LIMPIAR DATOS ---
+    async function loadData() {
+        try {
+            const response = await fetch(SHEET_URL);
+            if (!response.ok) throw new Error("Error al conectar con Google Sheets");
+            
+            let rawData = await response.json();
+            
+            console.log("DEBUG: Datos crudos recibidos:", rawData);
+
+            // --- SANITIZACIÓN: Asegurar que rawData es un Array ---
+            // A veces Google devuelve un objeto o algo raro. Esto lo fuerza a array.
+            if (!Array.isArray(rawData)) {
+                console.warn("El formato de datos no es un Array. Intentando convertir...");
+                // Si es un objeto, intentamos extraer sus valores
+                if (typeof rawData === 'object') {
+                    rawData = Object.values(rawData);
+                } else {
+                    rawData = [];
+                }
+            }
+
+            // --- FILTRADO Y LIMPIEZA DE COLUMNA ---
+            // Aseguramos que cada fila sea un objeto con claves correctas
+            const cleanData = rawData.map(row => {
+                // Si la fila es un string (error común), lo ignoramos
+                if (typeof row === 'string') return null;
+                
+                // Si la fila es un objeto, aseguramos que tenga las propiedades
+                // Si las claves vienen con espacios o tildes, las normalizamos
+                const cleanRow = {};
+                Object.keys(row).forEach(key => {
+                    const cleanKey = String(key).toLowerCase().trim().replace(/\s+/g, '');
+                    cleanRow[cleanKey] = row[key];
+                });
+                return cleanRow;
+            }).filter(r => r !== null);
+
+            console.log("DEBUG: Datos limpiados:", cleanData);
+
+            // Separar en PC y Mob
+            data.pc = cleanData.filter(item => (item.tipo && item.tipo.toLowerCase() === 'pc'));
+            data.mob = cleanData.filter(item => (item.tipo && item.tipo.toLowerCase() === 'mob'));
+
+            console.log("PCs encontrados:", data.pc.length);
+            console.log("Mob encontrados:", data.mob.length);
+
+            isLoading = false;
+            render();
+            calc();
+        } catch (error) {
+            console.error("Error cargando datos:", error);
+            document.body.innerHTML = `<h1 style="color:red; text-align:center; margin-top:50px;">Error al cargar datos.<br>${error.message}</h1>`;
+        }
+    }
+
+    // --- 3. LÓGICA DE VISTA (Render) ---
+    function avg(d) {
+        if (!d) return 0;
+        const m = d.toString().match(/(\d+)d(\d+)([+-]\d+)?/);
+        if(!m) return 0;
+        return (parseInt(m) * (parseInt(m)+1)/2) + (parseInt(m)||0);
+    }
+
+    function render() {
+        if (isLoading) return;
+        const txt = document.getElementById('search').value.toLowerCase();
+        const type = document.getElementById('type').value;
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        
+        let list = [];
+        if(type === 'all' || type === 'pc') list = list.concat(data.pc.map(i => ({...i, t: 'PC'})));
+        if(type === 'all' || type === 'mob') list = list.concat(data.mob.map(i => ({...i, t: 'Mob'})));
+        
+        const filtered = list.filter(i => 
+            (i.nombre && i.nombre.toLowerCase().includes(txt)) || 
+            (i.clase && i.clase.toLowerCase().includes(txt))
+        );
+        
+        if(filtered.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#888;">No encontrado o datos vacíos. Revisa la consola (F12).</div>';
+            return;
+        }
+
+        filtered.forEach(i => {
+            const card = document.createElement('div');
+            const uniqueId = i.id || Math.random().toString(36).substr(2, 9);
+            
+            card.className = `card ${i.t === 'PC' ? 'pc' : 'mob'}`;
+            
+            let xpHtml = i.t === 'Mob' ? `<div class="xp-badge">XP: ${i.xp || 0}</div>` : '';
+            let oroHtml = i.t === 'PC' ? `<div class="stat-row"><span class="stat-label">Oro:</span> <span class="stat-value gold-text">${i.oro || 0}</span></div>` : '';
+            
+            let invHtml = '';
+            if(i.t === 'PC' && i.inventario && Array.isArray(i.inventario) && i.inventario.length > 0) {
+                invHtml = `<div class="inv-list">
+                    <div style="font-weight:bold; margin-bottom:3px;">🎒 Inventario:</div>
+                    ${i.inventario.map(item => `<div class="inv-item"><span>${item}</span></div>`).join('')}
+                </div>`;
+            } else if (i.t === 'PC' && typeof i.inventario === 'string') {
+                 // Fallback si viene como string
+                 const items = i.inventario.split(',').map(s=>s.trim());
+                 invHtml = `<div class="inv-list">
+                    <div style="font-weight:bold; margin-bottom:3px;">🎒 Inventario:</div>
+                    ${items.map(item => `<div class="inv-item"><span>${item}</span></div>`).join('')}
+                </div>`;
+            }
+
+            card.innerHTML = `
+                <h3>${i.nombre || 'Sin Nombre'} ${xpHtml}</h3>
+                <div class="stat-row"><span>Nivel:</span> <span>${i.nivel || 0}</span></div>
+                <div class="stat-row"><span>CA:</span> <span>${i.ca || 10}</span></div>
+                <div class="stat-row"><span>PV:</span> <span class="${(i.pv || 0) < ((i.maxpv || 0)/2) ? 'danger' : ''}">${i.pv || 0} / ${i.maxpv || 0}</span></div>
+                ${oroHtml}
+                <div class="stat-row"><span>Atq:</span> <span>+${i.atk || 0}</span></div>
+                <div class="stat-row"><span>Daño:</span> <span>${avg(i.dmg)}</span></div>
+                ${invHtml}
+                
+                ${i.t === 'PC' ? `
+                <button class="secondary" style="width:100%; margin-top:10px;" onclick="alert('Para editar, ve a tu Google Sheets y cambia los valores. Los cambios se reflejarán al recargar la página.')">✏️ Editar (Ir a Google Sheets)</button>
+                ` : ''}
+            `;
+            grid.appendChild(card);
+        });
         
         // Actualizar calculadora
         const sel = document.getElementById('attacker');
@@ -167,6 +300,6 @@
 
     // --- 5. INICIO ---
     window.onload = loadData;
-            </script>
+</script>
 </body>
 </html>
