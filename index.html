@@ -3,128 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Campaña D&D</title>
+    <title>Gestor D&D</title>
     <style>
-        :root { --bg: #1a1a1d; --card: #2d2d30; --text: #e0e0e0; --accent: #c3073f; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        h1 { color: var(--accent); text-align: center; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        .controls { background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-        input, select, button { padding: 10px; border-radius: 5px; border: 1px solid #444; background: #333; color: white; font-size: 1rem; }
-        button { background-color: var(--accent); border: none; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: #a00635; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
-        .card { background: var(--card); padding: 15px; border-radius: 8px; border-left: 5px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .card h3 { margin-top: 0; color: #fff; }
-        .stat-row { display: flex; justify-content: space-between; margin: 5px 0; font-size: 0.9rem; border-bottom: 1px solid #444; padding-bottom: 2px; }
-        .stat-label { color: #aaa; }
-        .stat-value { font-weight: bold; }
-        .calculator { background: #252528; padding: 20px; border-radius: 8px; margin-top: 30px; border: 1px solid var(--accent); }
-        .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .result-box { margin-top: 20px; padding: 15px; background: #111; border-radius: 5px; text-align: center; font-size: 1.2rem; font-weight: bold; color: #4caf50; }
-        .danger { color: #ff5252; }
-        @media (max-width: 600px) { .calc-grid { grid-template-columns: 1fr; } }
+        body { font-family: sans-serif; background: #1a1a1d; color: #fff; padding: 20px; }
+        h1 { color: #c3073f; text-align: center; }
+        .controls { background: #2d2d30; padding: 15px; margin-bottom: 20px; border-radius: 8px; display: flex; gap: 10px; flex-wrap: wrap; }
+        input, select, button { padding: 8px; border-radius: 4px; border: 1px solid #444; background: #333; color: #fff; }
+        button { background: #c3073f; border: none; cursor: pointer; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+        .card { background: #2d2d30; padding: 15px; border-radius: 8px; border-left: 4px solid #c3073f; }
+        .stat { display: flex; justify-content: space-between; border-bottom: 1px solid #444; padding: 4px 0; font-size: 0.9rem; }
+        .calc { background: #252528; padding: 20px; margin-top: 20px; border-radius: 8px; }
+        .result { margin-top: 15px; padding: 10px; background: #111; text-align: center; font-weight: bold; color: #4caf50; }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <h1>🐉 Gestor de Campaña D&D</h1>
-    
+    <h1>🐉 Gestor de Campaña</h1>
     <div class="controls">
-        <input type="text" id="searchInput" placeholder="Buscar (ej: Orco, Mago)..." onkeyup="filtrarDatos()">
-        <select id="tipoSelect" onchange="filtrarDatos()">
-            <option value="todos">Todos</option>
-            <option value="personajes">Personajes (PCs)</option>
-            <option value="monstruos">Monstruos / NPCs</option>
-        </select>
-        <select id="nivelSelect" onchange="filtrarDatos()">
-            <option value="0">Cualquier Nivel</option>
-            <option value="1">Nivel > 1</option>
-            <option value="5">Nivel > 5</option>
+        <input type="text" id="search" placeholder="Buscar..." onkeyup="render()">
+        <select id="type" onchange="render()">
+            <option value="all">Todos</option>
+            <option value="pc">Personajes</option>
+            <option value="mob">Monstruos</option>
         </select>
     </div>
-
-    <div id="resultados" class="grid"></div>
-
-    <div class="calculator">
-        <h2>⚔️ Calculadora de Combate</h2>
-        <div class="calc-grid">
-            <div>
-                <label>Atacante:</label>
-                <select id="atacanteSelect" onchange="actualizarCalculadora()"></select>
-            </div>
-            <div>
-                <label>Defensor (CA):</label>
-                <input type="number" id="defensorCA" placeholder="Clase de Armadura" value="15">
-            </div>
-        </div>
-        <div class="result-box" id="resultadoCombate">Selecciona un atacante</div>
+    <div id="grid" class="grid"></div>
+    
+    <div class="calc">
+        <h2>⚔️ Combate</h2>
+        <select id="attacker" onchange="calc()"></select>
+        <input type="number" id="ac" value="15" placeholder="CA" onchange="calc()" style="width: 60px; margin-left: 10px;">
+        <div id="res" class="result">Selecciona atacante</div>
     </div>
 </div>
 
 <script>
-    // --- 1. BASE DE DATOS (EDITA AQUÍ) ---
-    // NOTA: Asegúrate de que cada objeto acabe con una coma, excepto el último de la lista.
-    const baseDatos = {
-        personajes: [
-            { "nombre": "Grok", "clase": "Guerrero", "nivel": 3, "ca": 16, "pv": 32, "fuerza": 18, "ataqueBonus": 5, "daño": "1d8+4" },
-            { "nombre": "Lira", "clase": "Mago", "nivel": 3, "ca": 12, "pv": 24, "inteligencia": 16, "ataqueBonus": 4, "daño": "1d6+2" },
-            { "nombre": "Thalin", "clase": "Pícaro", "nivel": 3, "ca": 14, "pv": 26, "destreza": 18, "ataqueBonus": 6, "daño": "1d6+4" }
+    // --- 1. DATOS (EDITA AQUÍ) ---
+    // IMPORTANTE: No olvides la coma (,) al final de cada objeto, excepto el último.
+    const db = {
+        pc: [
+            { n: "Grok", l: "Guerrero", lv: 3, ca: 16, pv: 32, atk: 5, dmg: "1d8+4" },
+            { n: "Lira", l: "Mago", lv: 3, ca: 12, pv: 24, atk: 4, dmg: "1d6+2" }
         ],
-        monstruos: [
-            { "nombre": "Goblin", "nivel": 0, "ca": 15, "pv": 7, "ataqueBonus": 4, "daño": "1d6+2" },
-            { "nombre": "Ogro", "nivel": 2, "ca": 15, "pv": 59, "ataqueBonus": 5, "daño": "2d6+5" },
-            { "nombre": "Dragón Joven", "nivel": 7, "ca": 18, "pv": 142, "ataqueBonus": 9, "daño": "2d10+6" },
-            { "nombre": "Esqueleto", "nivel": 0, "ca": 13, "pv": 13, "ataqueBonus": 4, "daño": "1d6+1" }
+        mob: [
+            { n: "Goblin", lv: 0, ca: 15, pv: 7, atk: 4, dmg: "1d6+2" },
+            { n: "Ogro", lv: 2, ca: 15, pv: 59, atk: 5, dmg: "2d6+5" }
         ]
     };
 
     // --- 2. LÓGICA ---
-
-    function obtenerPromedioDado(dadoStr) {
-        const regex = /(\d+)d(\d+)([+-]\d+)?/;
-        const match = dadoStr.match(regex);
-        if (!match) return 0;
-        const cantidad = parseInt(match);
-        const caras = parseInt(match);
-        const bonus = parseInt(match) || 0;
-        return (cantidad * (caras + 1) / 2) + bonus;
+    function avg(d) {
+        const m = d.match(/(\d+)d(\d+)([+-]\d+)?/);
+        if(!m) return 0;
+        return (parseInt(m) * (parseInt(m)+1)/2) + (parseInt(m)||0);
     }
 
-    function filtrarDatos() {
-        const texto = document.getElementById('searchInput').value.toLowerCase();
-        const tipo = document.getElementById('tipoSelect').value;
-        const nivelFiltro = parseInt(document.getElementById('nivelSelect').value);
+    function render() {
+        const txt = document.getElementById('search').value.toLowerCase();
+        const type = document.getElementById('type').value;
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
         
-        const contenedor = document.getElementById('resultados');
-        contenedor.innerHTML = '';
-
-        let items = [];
-        if (tipo === 'todos') {
-            items = [...baseDatos.personajes.map(p => ({...p, tipo: 'PC'})), ...baseDatos.monstruos.map(m => ({...m, tipo: 'Monstruo'}))];
-        } else if (tipo === 'personajes') {
-            items = baseDatos.personajes.map(p => ({...p, tipo: 'PC'}));
-        } else {
-            items = baseDatos.monstruos.map(m => ({...m, tipo: 'Monstruo'}));
-        }
-
-        const filtrados = items.filter(item => {
-            const coincideTexto = item.nombre.toLowerCase().includes(texto) || (item.clase && item.clase.toLowerCase().includes(texto));
-            const coincideNivel = nivelFiltro === 0 || (item.nivel || 0) > nivelFiltro;
-            return coincideTexto && coincideNivel;
-        });
-
-        if (filtrados.length === 0) {
-            contenedor.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #888;">No se encontraron resultados.</div>';
+        let list = [];
+        if(type === 'all' || type === 'pc') list = list.concat(db.pc.map(i => ({...i, t: 'PC'})));
+        if(type === 'all' || type === 'mob') list = list.concat(db.mob.map(i => ({...i, t: 'Mob'})));
+        
+        const filtered = list.filter(i => i.n.toLowerCase().includes(txt) || (i.l && i.l.toLowerCase().includes(txt)));
+        
+        if(filtered.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#888;">No encontrado</div>';
             return;
         }
 
-        filtrados.forEach(item => {
+        filtered.forEach(i => {
             const card = document.createElement('div');
             card.className = 'card';
-            const tipoLabel = item.tipo === 'PC' ? '🧙‍♂️ Personaje' : '👹 Monstruo';
-            
-            let statsHtml = `
-                <div class="stat-row"><span class="stat-label">Tipo:</span> <span class="stat-value">${tipoLabel}</span></div>
-                <div class="stat-row"><span class="stat-label">Nivel/CR:</span> <span class="stat-value">${item.nivel}</span></div>
+            card.innerHTML = `
+                <h3 style="margin:0 0 10px 0;">${i.n} <small style="color:#aaa">(${i.t})</small></h3>
+                <div class="stat"><span>Nivel:</span> <span>${i.lv}</span></div>
+                <div class="stat"><span>CA:</span> <span>${i.ca}</span></div>
+                <div class="stat"><span>PV:</span> <span>${i.pv}</span></div>
+                <div class="stat"><span>Atq:</span> <span>+${i.atk}</span></div>
+                <div class="stat"><span>Daño:</span> <span>${avg(i.dmg)}</span></div>
+            `;
+            grid.appendChild(card);
+        });
+        
+        // Actualizar selector de combate
+        const sel = document.getElementById('attacker');
+        sel.innerHTML = '<option value="">-- Elige --</option>';
+        list.forEach(i => {
+            sel.innerHTML += `<option value="${i.atk}|${i.dmg}">${i.n} (+${i.atk})</option>`;
+        });
+    }
+
+    function calc() {
+        const val = document.getElementById('attacker').value;
+        const ac = parseInt(document.getElementById('ac').value) || 10;
+        const out = document.getElementById('res');
+        
+        if(!val) { out.innerText = "Selecciona atacante"; out.style.color = "#4caf50"; return; }
+        
+        const [atk, dmg] = val.split('|');
+        const min = ac - parseInt(atk);
+        let prob = 0, msg = "";
+        
+        if(min <= 1) { prob = 100; msg = "¡Impacto Automático!"; }
+        else if(min > 20) { prob = 5; msg = "Solo Nat 20 (5%)"; }
+        else { prob = ((21-min)/20)*100; msg = `${prob.toFixed(1)}% de acierto`; }
+        
+        out.innerHTML = `${msg}<br><small>Daño: ~${avg(dmg)}</small>`;
+        out.style.color = prob > 50 ? "#4caf50" : "#ff5252";
+    }
+
+    // Iniciar
+    window.onload = () => {
+        try {
+            render();
+            calc();
+            console.log("Carga exitosa");
+        } catch (e) {
+            document.body.innerHTML = `<h1 style="color:red">ERROR: ${e.message}</h1><p>Revisa el código.</p>`;
+            console.error(e);
+        }
+    };
+</script>
+</body>
+</html>
