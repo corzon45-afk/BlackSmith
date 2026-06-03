@@ -6,25 +6,27 @@ function doGet() {
   var lastRow = sheet.getLastRow();
   var lastCol = sheet.getLastColumn();
   
+  // Si no hay datos
   if (lastRow < 2) {
     return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
   }
 
-  // Leer datos: Fila 1 (encabezados) y Fila 2 en adelante (datos)
-  var allData = sheet.getRange(1, 1, lastRow, lastCol).getValues();
-  var headers = allData; 
-  var dataRows = allData.slice(1); 
-
   var result = [];
-
-  for (var i = 0; i < dataRows.length; i++) {
-    var row = dataRows[i];
+  
+  // Leer encabezados primero
+  var headers = [];
+  for (var j = 1; j <= lastCol; j++) {
+    headers.push(sheet.getRange(1, j).getValue());
+  }
+  
+  // Leer filas de datos
+  for (var i = 2; i <= lastRow; i++) {
     var record = {};
-    
-    for (var j = 0; j < headers.length; j++) {
-      var key = String(headers[j]).toLowerCase().trim();
-      var val = row[j];
+    for (var j = 1; j <= lastCol; j++) {
+      var key = String(headers[j-1]).toLowerCase().trim();
+      var val = sheet.getRange(i, j).getValue();
       
+      // Manejo especial para inventario
       if (key === 'inventario' && typeof val === 'string' && val.includes(',')) {
         record[key] = val.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s !== ""; });
       } else {
@@ -36,4 +38,4 @@ function doGet() {
 
   return ContentService.createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
-}
+} 
