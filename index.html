@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Campaña D&D</title>
+    <title>Base de datos D&D de Nico</title>
     <style>
         :root {
             --bg-color: #1a1a1d;
@@ -42,7 +42,7 @@
 <body>
 
 <div class="container">
-    <h1>🐉 Gestor de Campaña D&D</h1>
+    <h1>🐉Base de datos D&D de Nico</h1>
     
     <!-- Buscador y Filtros -->
     <div class="controls">
@@ -56,6 +56,8 @@
             <option value="0">Cualquier Nivel</option>
             <option value="1">Nivel > 1</option>
             <option value="5">Nivel > 5</option>
+            <option value="5">Nivel > 10</option>
+            <option value="5">Nivel > 15</option>
         </select>
     </div>
 
@@ -85,9 +87,10 @@
     // --- 1. BASE DE DATOS (EDITA ESTO PARA AGREGAR TUS DATOS) ---
     const baseDatos = {
         personajes: [
-            { nombre: "Grok", clase: "Guerrero", nivel: 3, ca: 16, pv: 32, fuerza: 18, ataqueBonus: "+5", daño: "1d8+4" },
-            { nombre: "Lira", clase: "Mago", nivel: 3, ca: 12, pv: 24, inteligencia: 16, ataqueBonus: "+4", daño: "1d6+2" },
-            { nombre: "Thalin", clase: "Pícaro", nivel: 3, ca: 14, pv: 26, destreza: 18, ataqueBonus: "+6", daño: "1d6+4" }
+            { nombre: "Monzze", clase: "Cazador", raza: "semibestia", nivel: 2, ca: 13, pv: 18, fuerza: 14, ataqueBonus: "+2", daño: "1d8" },
+            { nombre: "Loveta", clase: "Cazador", raza: "semibestia", nivel: 2, ca: 13, pv: 18, fuerza: 14, ataqueBonus: "+2", daño: "1d8" },
+            { nombre: "Kayreli", clase: "Paladin", raza: "Elfo", nivel: 2, ca: 13, pv: 18, fuerza: 14, ataqueBonus: "+2", daño: "1d8" },
+            { nombre: "Aurora", clase: "Picaro", raza: "Aaracogra", nivel: 2, ca: 13, pv: 18, fuerza: 14, ataqueBonus: "+2", daño: "1d8" },
         ],
         monstruos: [
             { nombre: "Goblin", nivel: 0, ca: 15, pv: 7, ataqueBonus: "+4", daño: "1d6+2" },
