@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor D&D</title>
+    <title>Gestor D&D de Nico</title>
     <style>
         body { font-family: sans-serif; background: #1a1a1d; color: #fff; padding: 20px; }
         h1 { color: #c3073f; text-align: center; }
@@ -19,7 +19,7 @@
 </head>
 <body>
 <div class="container">
-    <h1>🐉 Gestor de Campaña</h1>
+    <h1>🐉 Base de datos de Nico</h1>
     <div class="controls">
         <input type="text" id="search" placeholder="Buscar..." onkeyup="render()">
         <select id="type" onchange="render()">
@@ -43,11 +43,17 @@
     // IMPORTANTE: No olvides la coma (,) al final de cada objeto, excepto el último.
     const db = {
         pc: [
-            { n: "Grok", l: "Guerrero", lv: 3, ca: 16, pv: 32, atk: 5, dmg: "1d8+4" },
-            { n: "Lira", l: "Mago", lv: 3, ca: 12, pv: 24, atk: 4, dmg: "1d6+2" }
+            { n: "Monzze", l: "Cazador", lv: 2, ca: 3, pv: 18, atk: +2, dmg: "1d8" },
+            { n: "Lobeta", l: "Cazador", lv: 1, ca: 12, pv: 9, atk: +2, dmg: "1d6" },
+            { n: "Keylira", l: "Paladin", lv: 1, ca: 5, pv: 11, atk: +2, dmg: "1d8" },
+            { n: "Aurora", l: "Picaro", lv: 1, ca: 3, pv: 11, atk: +1, dmg: "1d6" }
         ],
         mob: [
-            { n: "Goblin", lv: 0, ca: 15, pv: 7, atk: 4, dmg: "1d6+2" },
+            { n: "Lobo", lv: 1, ca: 15, pv: 11, xp: 60, dmg: "1d6+4" },
+            { n: "Oso Negro", lv: 1, ca: 15, pv: 19, atk: 6, dmg: "1d8+6" },
+            { n: "Araña Gigante", lv: 1, ca: 15, pv: 11, atk: 3, dmg: "1d4+3" },
+            { n: "Serpiente Gigante", lv: 1, ca: 15, pv: 14, atk: 4, dmg: "1d6+4" },
+            { n: "Goblin", lv: 1, ca: 15, pv: 7, atk: 4, dmg: "1d6+2" },
             { n: "Ogro", lv: 2, ca: 15, pv: 59, atk: 5, dmg: "2d6+5" }
         ]
     };
