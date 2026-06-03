@@ -51,7 +51,7 @@
         try {
             const response = await fetch(SHEET_URL);
             if (!response.ok) throw new Error("Error al conectar con Google Sheets");
-            const rawData = await response.json();
+            const rawData = await response.json();console.log("DEBUG: Datos crudos de Google:", rawData);
             
             // Separar en PC y Monstruos según la columna 'tipo'
             data.pc = rawData.filter(item => item.tipo === 'PC' || item.tipo === 'pc');
