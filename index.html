@@ -39,7 +39,7 @@
 </div>
 
 <script>
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwUmk__yXC79NlyFGpSlx2NrifhsfUDxTSaHStA1-bLknItyimbHLLHl8fb3ArA23JZTQ/exec"; // <--- ASEGÚRATE DE QUE ESTE CORRECTA
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwUmk__yXC79NlyFGpSlx2NrifhsfUDxTSaHStA1-bLknItyimbHLLHl8fb3ArA23JZTQ/exec";
     let data = { pc: [], mob: [], objetos: [] };
     let isLoading = true;
     async function loadData() {
@@ -105,8 +105,7 @@
         }
     }
 
-    // ... (El resto de funciones avg, render, calc se mantienen igual que en el paso anterior) ...
-    // Asegúrate de que la función render() tenga el mensaje "No encontrado" si la lista está vacía.
+
     
     function render() {
         if (isLoading) return;
@@ -130,8 +129,7 @@
             return;
         }
 
-        // ... (El resto del código de renderizado de tarjetas igual que antes) ...
-        // (Copiar aquí el código largo de render() del paso anterior, pero asegúrate de que el bloque if(filtered.length === 0) esté antes)
+        
         
         filtered.forEach(i => {
             const card = document.createElement('div');
@@ -170,7 +168,7 @@
             if(i.t === 'PC' && i.hechizos && Array.isArray(i.hechizos) && i.hechizos.length > 0) {
                 hechizosHtml = `<div style="margin-top:10px; border-top:1px solid #444; padding-top:5px; font-size:0.85rem;"><div style="font-weight:bold; color:#c3073f; margin-bottom:5px;">✨ Hechizos</div><div style="color:#aaa;">${i.hechizos.join(', ')}</div></div>`;
             } else if (i.t === 'PC' && i.hechizos && typeof i.hechizos === 'string' && i.hechizos.includes(',')) {
-                 // Fallback si viene como string separado por comas
+                 
                  let arr = i.hechizos.split(',').map(s=>s.trim());
                  hechizosHtml = `<div style="margin-top:10px; border-top:1px solid #444; padding-top:5px; font-size:0.85rem;"><div style="font-weight:bold; color:#c3073f; margin-bottom:5px;">✨ Hechizos</div><div style="color:#aaa;">${arr.join(', ')}</div></div>`;
             }
