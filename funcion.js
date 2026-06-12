@@ -277,7 +277,7 @@
     if (resEl) resEl.innerHTML=`<div class="dice-total" style="color:${col};">${total}</div><div class="dice-breakdown">${qty}d${selDie}${modStr} → ${pills}${mod!==0?` + ${mod}`:''}</div>`;
     
     const entry=document.createElement('div'); entry.className='log-entry';
-    entry.innerHTML=`<strong style="color:#e0e0e0;">${total}</strong> — ${qty}d${selDie}${modStr} [${rolls.join(', ')}]${isCrit?' 😤UN 20 NATURAL HDP!!!':isFail?' 🤣JAJAJA UN 1 NATURAL JAJAJA':''}`;
+    entry.innerHTML=`<strong style="color:#e0e0e0;">${total}</strong> — ${qty}d${selDie}${modStr} [${rolls.join(', ')}]${isCrit?' 😤UN NATURAL HDP!!! Tanta suerte...':isFail?' 🤣JAJAJA UN 1 JAJAJA':''}`;
     const log=document.getElementById('diceLog'); 
     if (log) {
       log.prepend(entry);
