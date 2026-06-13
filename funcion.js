@@ -1,5 +1,5 @@
  const SHEET_URL = "https://script.google.com/macros/s/AKfycbwUmk__yXC79NlyFGpSlx2NrifhsfUDxTSaHStA1-bLknItyimbHLLHl8fb3ArA23JZTQ/exec";
-  let data      = { pc: [], mob: [] };
+  let data      = { pc: [], mob: [], objeto: [] };
   let isLoading = true;
 
   function getStoredImages() {
@@ -35,6 +35,7 @@
 
       data.pc  = clean.filter(i => String(i.tipo).toLowerCase().trim() === 'pc');
       data.mob = clean.filter(i => String(i.tipo).toLowerCase().trim() === 'mob');
+      data.objeto  = clean.filter(i => String(i.tipo).toLowerCase().trim() === 'objeto');
       isLoading = false;
       render();
     } catch (e) {
@@ -90,7 +91,7 @@
       ? `<div class="card-img-wrap"><img class="card-img" src="${imgSrc}"><div class="img-overlay"><button class="img-btn change" onclick="triggerUpload('${nombre.replace(/'/g,"\\'")}')">🖼 Cambiar</button><button class="img-btn remove" onclick="handleRemoveImage('${nombre.replace(/'/g,"\\'")}')">✕</button></div></div>`
       : `<div class="img-placeholder" onclick="triggerUpload('${nombre.replace(/'/g,"\\'")}')"><span style="font-size:2rem;">📷</span><span>Click para agregar imagen</span></div>`;
 
-    const badge  = `<span class="badge ${isMob?'mob':'pc'}">${isMob?'Monstruo':'Personaje'}</span>`;
+    const badge  = `<span class="badge ${isMob?'mob':'pc':'objeto'}">${isMob?'Monstruo':'Personaje':'objeto'}</span>`;
     const hpBar  = `<div class="hp-wrap"><div class="hp-label"><span>HP</span><span>${pv} / ${maxpv}</span></div><div class="hp-bar-bg"><div class="hp-bar-fill" style="width:${Math.round(pct*100)}%;background:${hpColor(pct)};"></div></div></div>`;
 
     let stats = `
