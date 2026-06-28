@@ -2,7 +2,7 @@
 // CONFIGURACIÓN Y ESTADO GLOBAL
 // ==========================================
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbzrudi-ghECrOg3hyclb0aqP8HpYvo6GL0Pt6sOJ8qkkRNJsxOZJ5cctVEGdBrGgxud/exec";
-const SHEET_ITEMS_URL = "https://script.google.com/macros/s/AKfycbwPn7XI79yB_RzkFk-yBxMjLWDlMWHEkUSwhXBsJ4Rawasd_5vs7waSNImKAMReZU8I3g/exec"; 
+const SHEET_ITEMS_URL = "https://script.google.com/macros/s/AKfycbyNEtJtKUULLP1gGtthz6zuxhBnJoFo5442XhTDLRMDIKZ6kWJj_9pmHLx7VgYtacnJsw/exec"; 
 
 let data = { pc: [], mob: [], items: [] };
 let isLoading = true;
