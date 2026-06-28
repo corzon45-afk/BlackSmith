@@ -134,9 +134,10 @@ function avgDmg(d) {
   const m = String(d).match(/(\d+)d(\d+)([+-]\d+)?/);
   if (!m) return parseInt(d) || 0;
   
-  const count = parseInt(m);
-  const sides = parseInt(m);
-  const modifier = parseInt(m) || 0;
+  // CORRECCIÓN: Usar los índices , ,  del array de coincidencia
+  const count = parseInt(m); // Cantidad de dados
+  const sides = parseInt(m); // Lados del dado
+  const modifier = parseInt(m) || 0; // Modificador
   
   return Math.round(count * (sides + 1) / 2 + modifier);
 }
@@ -342,7 +343,6 @@ function rollAttack() {
   const val = document.getElementById('attacker').value;
   const ac = parseInt(document.getElementById('ac').value) || 10;
   
-  // Solución segura: Evita fallos si no se ha seleccionado un atacante real
   if (!val || val.indexOf('|') === -1) { 
     alert('Seleccioná un atacante válido primero.'); 
     return; 
@@ -359,9 +359,9 @@ function rollAttack() {
   if (hit) {
     const m = String(dmg).match(/(\d+)d(\d+)([+-]\d+)?/);
     if (m) {
-      const dice = parseInt(m[1]) * (crit ? 2 : 1);
-      for (let i = 0; i < dice; i++) dmgRoll += Math.ceil(Math.random() * parseInt(m[2]));
-      dmgRoll += parseInt(m[3]) || 0;
+      const dice = parseInt(m) * (crit ? 2 : 1);
+      for (let i = 0; i < dice; i++) dmgRoll += Math.ceil(Math.random() * parseInt(m));
+      dmgRoll += parseInt(m) || 0;
     } else {
       dmgRoll = parseInt(dmg) || 0;
     }
@@ -411,7 +411,7 @@ function polyShape(d, label) {
     100: `<circle cx="50" cy="50" r="44" fill="${f}" stroke="${s}" stroke-width="3"/><text x="50" y="57" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#fff">${L}</text>`
   };
 
-  return `<svg viewBox="0 0 100 100">${shapes[d] || shapes[4]}</svg>`;
+  return `<svg viewBox="0 0 100 100">${shapes[d] || shapes}</svg>`;
 }
 
 function getFaceRot(v) {
@@ -446,7 +446,7 @@ function rollDice() {
   const qty = Math.max(1, Math.min(20, parseInt(document.getElementById('diceQty').value) || 1));
   const mod = parseInt(document.getElementById('diceMod').value) || 0;
   const rolls = Array.from({ length: qty }, () => Math.ceil(Math.random() * selDie));
-  const first = rolls[0];
+  const first = rolls;
   
   buildArena();
   
@@ -477,8 +477,8 @@ function showDiceResult(rolls, mod) {
   
   const pills = rolls.map(r => `<span class="roll-pill ${r === selDie ? 'crit' : r === 1 ? 'fail' : ''}">${r}</span>`).join('');
   const modStr = mod !== 0 ? ` ${mod > 0 ? '+' : ''}${mod}` : '';
-  const isCrit = qty === 1 && rolls[0] === selDie;
-  const isFail = qty === 1 && rolls[0] === 1;
+  const isCrit = qty === 1 && rolls === selDie;
+  const isFail = qty === 1 && rolls === 1;
   const col = isCrit ? '#ff9800' : isFail ? '#ef5350' : '#ffffff';
   
   const resEl = document.getElementById('diceResult');
@@ -508,7 +508,6 @@ document.addEventListener('DOMContentLoaded', () => {
   buildArena(); 
   loadData();
   
-  // Agrupación de Listeners para mejor visibilidad
   document.getElementById('search')?.addEventListener('input', render);
   document.getElementById('type')?.addEventListener('change', render);
   document.getElementById('btnAttack')?.addEventListener('click', rollAttack);
