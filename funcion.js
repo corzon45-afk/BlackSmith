@@ -2,7 +2,6 @@
 // CONFIGURACIÓN Y ESTADO GLOBAL
 // ==========================================
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbzrudi-ghECrOg3hyclb0aqP8HpYvo6GL0Pt6sOJ8qkkRNJsxOZJ5cctVEGdBrGgxud/exec";
-// REEMPLAZA ESTO CON TU URL DE LA HOJA DE ITEMS
 const SHEET_ITEMS_URL = "https://script.google.com/macros/s/AKfycbx-wwgUVbmbrc149T132DBHZm5Okm6iSJmATalRfrPPDWArNdeNxIXme8HnQGdKok_CXA/exec"; 
 
 let data = { pc: [], mob: [], items: [] };
@@ -41,8 +40,10 @@ function triggerUpload(nombre) {
   input.type = 'file';
   input.accept = 'image/*';
   input.onchange = e => {
-    const file = e.target.files;
+    // CORRECCIÓN: Acceder al primer archivo 
+    const file = e.target.files; 
     if (!file) return;
+    
     const reader = new FileReader();
     reader.onload = ev => {
       saveImage(nombre, ev.target.result);
@@ -80,7 +81,6 @@ async function loadData() {
       if (!row || typeof row !== 'object') return null;
       const r = {};
       Object.keys(row).forEach(k => {
-        // Normalizar clave: minúsculas, sin espacios
         const ck = String(k).toLowerCase().trim().replace(/\s+/g, '');
         r[ck] = row[k];
       });
@@ -133,7 +133,12 @@ function avgDmg(d) {
   if (!d) return 0;
   const m = String(d).match(/(\d+)d(\d+)([+-]\d+)?/);
   if (!m) return parseInt(d) || 0;
-  return Math.round(parseInt(m) * (parseInt(m) + 1) / 2 + (parseInt(m) || 0));
+  
+  const count = parseInt(m);
+  const sides = parseInt(m);
+  const modifier = parseInt(m) || 0;
+  
+  return Math.round(count * (sides + 1) / 2 + modifier);
 }
 
 function hpColor(p) { 
@@ -179,17 +184,14 @@ function buildCard(i) {
   
   const badge = `<span class="badge ${badgeClass}">${badgeText}</span>`;
 
-  // --- LÓGICA ESPECÍFICA PARA ITEMS (NUEVA ESTRUCTURA) ---
+  // --- LÓGICA ESPECÍFICA PARA ITEMS ---
   if (isItem) {
-    // Mapeo estricto a tus columnas:
-    // nombre, tipo, naturaleza, efecto, descripcion, precio, rareza
     const naturaleza = i.naturaleza || '—';
     const efecto = i.efecto || '—';
     const descripcion = i.descripcion || 'Sin descripción';
     const precio = i.precio || '—';
     const rareza = i.rareza || 'Común';
 
-    // Colores según rareza (opcional)
     let rarityColor = '#ffffff';
     if (rareza.toLowerCase().includes('rara')) rarityColor = '#00b0ff';
     if (rareza.toLowerCase().includes('épica')) rarityColor = '#9c27b0';
@@ -252,14 +254,10 @@ function render() {
 
   let list = [];
   
-  // Agregamos PCs y Monstruos
   if (type === 'all' || type === 'pc') list = list.concat(data.pc.map(i => ({ ...i, t: 'PC' })));
   if (type === 'all' || type === 'mob') list = list.concat(data.mob.map(i => ({ ...i, t: 'Mob' })));
-  
-  // Agregamos Items
   if (type === 'all' || type === 'item') list = list.concat(data.items.map(i => ({ ...i, t: 'Item' })));
 
-  // Filtrado
   const filtered = list.filter(i =>
     !txt ||
     (i.nombre && i.nombre.toLowerCase().includes(txt)) ||
