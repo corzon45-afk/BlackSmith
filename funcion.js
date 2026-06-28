@@ -2,7 +2,10 @@
 // CONFIGURACIÓN Y ESTADO GLOBAL
 // ==========================================
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbzrudi-ghECrOg3hyclb0aqP8HpYvo6GL0Pt6sOJ8qkkRNJsxOZJ5cctVEGdBrGgxud/exec";
-let data = { pc: [], mob: [] };
+// REEMPLAZA ESTO CON TU URL DE LA HOJA DE ITEMS
+const SHEET_ITEMS_URL = "https://script.google.com/macros/s/AKfycbx-wwgUVbmbrc149T132DBHZm5Okm6iSJmATalRfrPPDWArNdeNxIXme8HnQGdKok_CXA/exec"; 
+
+let data = { pc: [], mob: [], items: [] };
 let isLoading = true;
 
 const DICE = [4, 6, 8, 10, 12, 20, 100];
@@ -38,7 +41,7 @@ function triggerUpload(nombre) {
   input.type = 'file';
   input.accept = 'image/*';
   input.onchange = e => {
-    const file = e.target.files[0];
+    const file = e.target.files;
     if (!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
@@ -60,13 +63,38 @@ function handleRemoveImage(nombre) {
 // ==========================================
 async function loadData() {
   try {
-    const res = await fetch(SHEET_URL);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    // Cargamos ambas hojas en paralelo
+    const [resMain, resItems] = await Promise.all([
+      fetch(SHEET_URL),
+      fetch(SHEET_ITEMS_URL)
+    ]);
+
+    if (!resMain.ok) throw new Error(`HTTP ${resMain.status} (Datos)`);
+    if (!resItems.ok) throw new Error(`HTTP ${resItems.status} (Items)`);
     
-    let raw = await res.json();
+    // Procesar Datos Principales (PC/Mob)
+    let raw = await resMain.json();
     if (!Array.isArray(raw)) raw = Object.values(raw || {});
     
-    const clean = raw.map(row => {
+    const cleanMain = raw.map(row => {
+      if (!row || typeof row !== 'object') return null;
+      const r = {};
+      Object.keys(row).forEach(k => {
+        // Normalizar clave: minúsculas, sin espacios
+        const ck = String(k).toLowerCase().trim().replace(/\s+/g, '');
+        r[ck] = row[k];
+      });
+      return r;
+    }).filter(Boolean);
+
+    data.pc = cleanMain.filter(i => String(i.tipo).toLowerCase().trim() === 'pc');
+    data.mob = cleanMain.filter(i => String(i.tipo).toLowerCase().trim() === 'mob');
+
+    // Procesar Datos de Items
+    let rawItems = await resItems.json();
+    if (!Array.isArray(rawItems)) rawItems = Object.values(rawItems || {});
+
+    const cleanItems = rawItems.map(row => {
       if (!row || typeof row !== 'object') return null;
       const r = {};
       Object.keys(row).forEach(k => {
@@ -76,20 +104,23 @@ async function loadData() {
       return r;
     }).filter(Boolean);
 
-    data.pc = clean.filter(i => String(i.tipo).toLowerCase().trim() === 'pc');
-    data.mob = clean.filter(i => String(i.tipo).toLowerCase().trim() === 'mob');
+    // Filtrar solo los que sean 'item' o 'objeto'
+    data.items = cleanItems.filter(i => 
+      String(i.tipo).toLowerCase().trim() === 'item' || 
+      String(i.tipo).toLowerCase().trim() === 'objeto'
+    );
     
     isLoading = false;
     render();
   } catch (e) {
     isLoading = false;
-    console.error("Error cargando la API de Google:", e);
+    console.error("Error cargando las APIs:", e);
     const grid = document.getElementById('grid');
     if (grid) {
       grid.innerHTML = `
         <div class="empty-msg" style="color:#ef5350;">
-          Aviso: No se pudieron sincronizar los datos online (${e.message}). <br>
-          <small>Comprobá que el script de Google sea público y esté bien implementado.</small>
+          Aviso: No se pudieron sincronizar los datos. <br>
+          <small>${e.message}</small>
         </div>`;
     }
   }
@@ -102,7 +133,7 @@ function avgDmg(d) {
   if (!d) return 0;
   const m = String(d).match(/(\d+)d(\d+)([+-]\d+)?/);
   if (!m) return parseInt(d) || 0;
-  return Math.round(parseInt(m[1]) * (parseInt(m[2]) + 1) / 2 + (parseInt(m[3]) || 0));
+  return Math.round(parseInt(m) * (parseInt(m) + 1) / 2 + (parseInt(m) || 0));
 }
 
 function hpColor(p) { 
@@ -124,20 +155,65 @@ function addLogEntry(targetId, htmlContent) {
 // ==========================================
 function buildCard(i) {
   const isMob = String(i.tipo).toLowerCase().trim() === 'mob' || i.t === 'Mob';
+  const isItem = String(i.tipo).toLowerCase().trim() === 'item' || i.t === 'Item' || String(i.tipo).toLowerCase().trim() === 'objeto';
+  
   const pv = parseInt(i.pv) || 0;
   const maxpv = parseInt(i.maxpv) || 1;
   const pct = Math.max(0, Math.min(1, pv / maxpv));
+  
   const nombre = i.nombre || 'Sin nombre';
   const imgs = getStoredImages();
   const imgSrc = imgs[nombre];
-
   const escapedName = nombre.replace(/'/g, "\\'");
 
+  // Lógica de imagen
   let imgHtml = imgSrc 
     ? `<div class="card-img-wrap"><img class="card-img" src="${imgSrc}"><div class="img-overlay"><button class="img-btn change" onclick="triggerUpload('${escapedName}')">🖼 Cambiar</button><button class="img-btn remove" onclick="handleRemoveImage('${escapedName}')">✕</button></div></div>`
     : `<div class="img-placeholder" onclick="triggerUpload('${escapedName}')"><span style="font-size:2rem;">📷</span><span>Click para agregar imagen</span></div>`;
 
-  const badge = `<span class="badge ${isMob ? 'mob' : 'pc'}">${isMob ? 'Monstruo' : 'Personaje'}</span>`;
+  // Badge de tipo
+  let badgeClass = 'pc';
+  let badgeText = 'Personaje';
+  if (isMob) { badgeClass = 'mob'; badgeText = 'Monstruo'; }
+  if (isItem) { badgeClass = 'item'; badgeText = 'Objeto'; }
+  
+  const badge = `<span class="badge ${badgeClass}">${badgeText}</span>`;
+
+  // --- LÓGICA ESPECÍFICA PARA ITEMS (NUEVA ESTRUCTURA) ---
+  if (isItem) {
+    // Mapeo estricto a tus columnas:
+    // nombre, tipo, naturaleza, efecto, descripcion, precio, rareza
+    const naturaleza = i.naturaleza || '—';
+    const efecto = i.efecto || '—';
+    const descripcion = i.descripcion || 'Sin descripción';
+    const precio = i.precio || '—';
+    const rareza = i.rareza || 'Común';
+
+    // Colores según rareza (opcional)
+    let rarityColor = '#ffffff';
+    if (rareza.toLowerCase().includes('rara')) rarityColor = '#00b0ff';
+    if (rareza.toLowerCase().includes('épica')) rarityColor = '#9c27b0';
+    if (rareza.toLowerCase().includes('legendaria')) rarityColor = '#ff9800';
+
+    return `
+      ${imgHtml}${badge}
+      <h3>${nombre}</h3>
+      
+      <div class="card-detail">
+        <div class="detail-row"><strong>Rareza:</strong> <span style="color:${rarityColor};">${rareza}</span></div>
+        <div class="detail-row"><strong>Naturaleza:</strong> ${naturaleza}</div>
+        <div class="detail-row"><strong>Precio:</strong> ${precio}</div>
+      </div>
+
+      <div class="section-mini">⚡ Efecto</div>
+      <div class="tag-list" style="margin-bottom:8px;">${efecto}</div>
+
+      <div class="section-mini">📜 Descripción</div>
+      <div class="extras-note" style="white-space: pre-wrap; font-size: 0.9em;">${descripcion}</div>
+    `;
+  }
+
+  // --- LÓGICA ORIGINAL PARA PC/Monstruo ---
   const hpBar = `<div class="hp-wrap"><div class="hp-label"><span>HP</span><span>${pv} / ${maxpv}</span></div><div class="hp-bar-bg"><div class="hp-bar-fill" style="width:${Math.round(pct * 100)}%;background:${hpColor(pct)};"></div></div></div>`;
 
   let stats = `
@@ -175,29 +251,44 @@ function render() {
   if (!grid) return;
 
   let list = [];
+  
+  // Agregamos PCs y Monstruos
   if (type === 'all' || type === 'pc') list = list.concat(data.pc.map(i => ({ ...i, t: 'PC' })));
   if (type === 'all' || type === 'mob') list = list.concat(data.mob.map(i => ({ ...i, t: 'Mob' })));
+  
+  // Agregamos Items
+  if (type === 'all' || type === 'item') list = list.concat(data.items.map(i => ({ ...i, t: 'Item' })));
 
+  // Filtrado
   const filtered = list.filter(i =>
     !txt ||
     (i.nombre && i.nombre.toLowerCase().includes(txt)) ||
     (i.clase && i.clase.toLowerCase().includes(txt)) ||
-    (i.raza && i.raza.toLowerCase().includes(txt))
+    (i.raza && i.raza.toLowerCase().includes(txt)) ||
+    (i.descripcion && i.descripcion.toLowerCase().includes(txt)) ||
+    (i.efecto && i.efecto.toLowerCase().includes(txt)) ||
+    (i.naturaleza && i.naturaleza.toLowerCase().includes(txt))
   );
 
-  if (!filtered.length) {
+  // Lógica: Si no hay texto de búsqueda, NO mostrar items (solo si el filtro es 'all')
+  let finalList = filtered;
+  if (!txt && type === 'all') {
+      finalList = finalList.filter(i => i.t !== 'Item');
+  }
+
+  if (!finalList.length) {
     grid.innerHTML = `<div class="empty-msg">No se encontraron resultados.</div>`;
   } else {
     grid.innerHTML = '';
-    filtered.forEach(i => {
+    finalList.forEach(i => {
       const card = document.createElement('div');
-      card.className = `card ${i.t === 'Mob' ? 'mob' : ''}`;
+      card.className = `card ${i.t === 'Mob' || i.t === 'Item' ? i.t.toLowerCase() : ''}`;
       card.innerHTML = buildCard(i);
       grid.appendChild(card);
     });
   }
 
-  // Actualizar selector de combatientes dinámicamente
+  // Actualizar selector de combatientes (Solo PC y Mob)
   const sel = document.getElementById('attacker');
   if (sel) {
     const prev = sel.value;
