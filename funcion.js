@@ -134,11 +134,12 @@ function avgDmg(d) {
   const m = String(d).match(/(\d+)d(\d+)([+-]\d+)?/);
   if (!m) return parseInt(d) || 0;
   
-  // CORRECCIÓN: Usar los índices , ,  del array de coincidencia
-  const count = parseInt(m); // Cantidad de dados
-  const sides = parseInt(m); // Lados del dado
-  const modifier = parseInt(m) || 0; // Modificador
+  // CORRECCIÓN: Usar los índices 1, 2 y 3 del array de coincidencia
+  const count = parseInt(m); // Cantidad de dados (ej: 2)
+  const sides = parseInt(m); // Lados del dado (ej: 6)
+  const modifier = parseInt(m) || 0; // Modificador (ej: 3)
   
+  // Fórmula: Cantidad * (Caras + 1) / 2 + Modificador
   return Math.round(count * (sides + 1) / 2 + modifier);
 }
 
