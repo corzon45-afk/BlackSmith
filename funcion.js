@@ -251,7 +251,7 @@ function buildCard(i) {
   if (i.extras) extras += `<div class="extras-note">📝 ${i.extras}</div>`;
 
   return `${imgHtml}${badge}<h3>${nombre}${i.raza ? ` <small style="color:#888;">(${i.raza})</small>` : ''}</h3>${hpBar}${stats}${attrs}${extras}`;
-
+}
 function render() {
   if (isLoading) return;
   const txt = (document.getElementById('search')?.value || '').toLowerCase();
@@ -478,7 +478,7 @@ function rollDice() {
     showDiceResult(rolls, mod); 
     rolling = false; 
   }, 1050);
-}
+} // <--- ¡ESTA LLAVE ES LA QUE FALTABA! Cierra rollDice
 
 function showDiceResult(rolls, mod) {
   const qty = rolls.length;
@@ -529,4 +529,4 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', e => { 
     if (e.key === 'Enter') rollDice(); 
   });
-});
+}); // <--- Asegúrate de que esto también esté presente al final del archivo
