@@ -190,7 +190,7 @@ function buildCard(i) {
   if (isItem) {
     const naturaleza = i.naturaleza || '—';
     const efecto = i.efecto || '—';
-    const descripcion = i.descripcion || 'descripcion';
+    const descripcion = i.descripcion || '—';
     const precio = i.precio || '—';
     const rareza = i.rareza || 'Común';
 
