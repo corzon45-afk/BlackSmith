@@ -198,7 +198,6 @@ function buildCard(i) {
     if (rareza.toLowerCase().includes('rara')) rarityColor = '#00b0ff';
     if (rareza.toLowerCase().includes('épica')) rarityColor = '#9c27b0';
     if (rareza.toLowerCase().includes('legendaria')) rarityColor = '#ff9800';
-    if (rareza.toLowerCase().includes('recompensa')) rarityColor = '#ff9800';
 
     return `
       ${imgHtml}${badge}
