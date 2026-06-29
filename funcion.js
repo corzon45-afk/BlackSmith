@@ -243,6 +243,8 @@ function buildCard(i) {
   if (hechizos) extras += `<div class="section-mini">✨ Hechizos</div><div class="tag-list">${hechizos}</div>`;
   if (inv) extras += `<div class="section-mini">🎒 Inventario</div><div class="tag-list">${inv}</div>`;
   if (i.extras) extras += `<div class="extras-note">📝 ${i.extras}</div>`;
+  if (oro) extras += `<div class="section-mini">🪙 Oro</div><div class="tag-list">${Oro}</div>`;
+  if (i.xp) extras += `<div class="stat-row"><span>XP</span><span>${i.xp}</span></div>` : ''}`;
 
   return `${imgHtml}${badge}<h3>${nombre}${i.raza ? ` <small style="color:#888;">(${i.raza})</small>` : ''}</h3>${hpBar}${stats}${attrs}${extras}`;
 }
