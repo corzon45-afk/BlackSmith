@@ -436,13 +436,17 @@ function buildArena(result) {
   const arena = document.getElementById('arena'); 
   if (!arena) return;
   
-  if (selDie === 6) {
+    if (selDie === 6) {
     const f = result != null ? getFaceRot(result) : { rx: 0, ry: 0 };
     arena.innerHTML = `
       <div class="d6-wrap" id="d6" style="--rx:${f.rx}deg;--ry:${f.ry}deg;transform:rotateX(${f.rx}deg) rotateY(${f.ry}deg);">
-        <div class="d6-face f1">1</div><div class="d6-face f2">6</div>
-        <div class="d6-face f3">2</div><div class="d6-face f4">5</div>
-        <div class="d6-face f5">3</div><div class="d6-face f6">4</div>
+        <!-- Corregido: Alineación correcta de caras (1 opuesto a 6, 2 opuesto a 5, 3 opuesto a 4) -->
+        <div class="d6-face f1">1</div> 
+        <div class="d6-face f2">2</div> 
+        <div class="d6-face f3">3</div> 
+        <div class="d6-face f4">4</div> 
+        <div class="d6-face f5">5</div> 
+        <div class="d6-face f6">6</div> 
       </div>`;
   } else {
     arena.innerHTML = `<div class="poly-die" id="polyDie">${polyShape(selDie, result != null ? result : '')}</div>`;
