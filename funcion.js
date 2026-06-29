@@ -191,7 +191,7 @@ function buildCard(i) {
     const naturaleza = i.naturaleza || '—';
     const efecto = i.efecto || '—';
     const descripcion = i.descripcion || 'Sin descripción';
-    const precio = i.precio || 'Oculto';
+    const precio = i.precio || 'Recompensa';
     const rareza = i.rareza || 'Común';
 
     let rarityColor = '#ffffff';
