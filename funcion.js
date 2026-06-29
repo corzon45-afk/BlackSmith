@@ -206,7 +206,6 @@ function buildCard(i) {
       <div class="card-detail">
         <div class="detail-row"><strong>Rareza:</strong> <span style="color:${rarityColor};">${rareza}</span></div>
         <div class="detail-row"><strong>Naturaleza:</strong> ${naturaleza}</div>
-        <div class="detail-row"><strong>Precio:</strong> ${precio}</div>
       </div>
 
       <div class="section-mini">⚡ Efecto</div>
