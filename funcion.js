@@ -272,8 +272,11 @@ function render() {
 
   // Lógica: Si no hay texto de búsqueda, NO mostrar items (solo si el filtro es 'all')
   let finalList = filtered;
+  // --- LÓGICA DE VISIBILIDAD ACTUALIZADA ---
+  // Si no hay texto de búsqueda Y el filtro es 'all',
+  // mostramos SOLAMENTE los Mobs. PC e Items se ocultan.
   if (!txt && type === 'all') {
-      finalList = finalList.filter(i => i.t !== 'Item');
+      finalList = filtered.filter(i => i.t === 'Mob');
   }
 
   if (!finalList.length) {
@@ -282,6 +285,7 @@ function render() {
     grid.innerHTML = '';
     finalList.forEach(i => {
       const card = document.createElement('div');
+      // Mantenemos la clase CSS original para estilos
       card.className = `card ${i.t === 'Mob' || i.t === 'Item' ? i.t.toLowerCase() : ''}`;
       card.innerHTML = buildCard(i);
       grid.appendChild(card);
