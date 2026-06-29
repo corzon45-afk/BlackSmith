@@ -218,14 +218,20 @@ function buildCard(i) {
   }
 
   // --- LÓGICA ORIGINAL PARA PC/Monstruo ---
+  // --- LÓGICA ACTUALIZADA PARA PC/Monstruo ---
   const hpBar = `<div class="hp-wrap"><div class="hp-label"><span>HP</span><span>${pv} / ${maxpv}</span></div><div class="hp-bar-bg"><div class="hp-bar-fill" style="width:${Math.round(pct * 100)}%;background:${hpColor(pct)};"></div></div></div>`;
+
+  // Detectar valores de Oro y XP (busca en varias posibles claves de la hoja)
+  const oro = i.oro || i.gold || i.oros || 0;
+  const xp = i.xp || i.experiencia || 0;
 
   let stats = `
     <div class="stat-row"><span>Nivel / CR</span><span>${i.nivel || i.cr || '—'}</span></div>
     <div class="stat-row"><span>CA</span><span>${i.ca || 10}</span></div>
     <div class="stat-row"><span>Ataque</span><span>+${i.atk || 0}</span></div>
     <div class="stat-row"><span>Daño (prom.)</span><span>${avgDmg(i.dmg)} (${i.dmg || '1d6'})</span></div>
-    ${isMob && i.xp ? `<div class="stat-row"><span>XP</span><span>${i.xp}</span></div>` : ''}`;
+    ${xp ? `<div class="stat-row"><span>XP</span><span>${xp}</span></div>` : ''}
+    ${oro ? `<div class="stat-row"><span>Oro</span><span>💰 ${oro}</span></div>` : ''}`; // Nueva línea para Oro
 
   let attrs = '';
   if (!isMob) {
@@ -243,11 +249,8 @@ function buildCard(i) {
   if (hechizos) extras += `<div class="section-mini">✨ Hechizos</div><div class="tag-list">${hechizos}</div>`;
   if (inv) extras += `<div class="section-mini">🎒 Inventario</div><div class="tag-list">${inv}</div>`;
   if (i.extras) extras += `<div class="extras-note">📝 ${i.extras}</div>`;
-  if (oro) extras += `<div class="section-mini">🪙 Oro</div><div class="tag-list">${Oro}</div>`;
-  if (i.xp) extras += `<div class="section-mini">Xp</div><div class="tag-list">${Xp}</div>`;
 
   return `${imgHtml}${badge}<h3>${nombre}${i.raza ? ` <small style="color:#888;">(${i.raza})</small>` : ''}</h3>${hpBar}${stats}${attrs}${extras}`;
-}
 
 function render() {
   if (isLoading) return;
