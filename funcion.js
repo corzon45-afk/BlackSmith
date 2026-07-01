@@ -15,6 +15,9 @@ let rolling = false;
 // ==========================================
 // CARGA DE DATOS (API GOOGLE SHEETS)
 // ==========================================
+// ==========================================
+// CARGA DE DATOS (API GOOGLE SHEETS)
+// ==========================================
 async function loadData() {
   try {
     // Cargamos ambas hojas en paralelo
@@ -30,17 +33,18 @@ async function loadData() {
     let raw = await resMain.json();
     if (!Array.isArray(raw)) raw = Object.values(raw || {});
     
-// Dentro de loadData(), en la parte de mapeo:
+    // CORRECCIÓN: Limpieza del mapeo para asegurar que se lea la columna 'imagen'
     const cleanMain = raw.map(row => {
       if (!row || typeof row !== 'object') return null;
       const r = {};
       Object.keys(row).forEach(k => {
-    const ck = String(k).toLowerCase().trim().replace(/\s+/g, '');
-    r[ck] = row[k];
-  });
-  return r;
-}).filter(Boolean);
-// Ahora 'r' tendrá una propiedad 'r.imagen' si la columna en el sheet se llama "imagen"
+        // Normaliza la clave: minúsculas, sin espacios, sin guiones bajos extra
+        const ck = String(k).toLowerCase().trim().replace(/\s+/g, '');
+        r[ck] = row[k];
+      });
+      return r;
+    }).filter(Boolean);
+
     data.pc = cleanMain.filter(i => String(i.tipo).toLowerCase().trim() === 'pc');
     data.mob = cleanMain.filter(i => String(i.tipo).toLowerCase().trim() === 'mob');
 
@@ -65,10 +69,11 @@ async function loadData() {
     );
     
     isLoading = false;
+    console.log("Datos cargados:", data); // <--- AGREGADO PARA DEPURAR
     render();
   } catch (e) {
     isLoading = false;
-    console.error("Error cargando las APIs:", e);
+    console.error("Error cargando las APIs:", e); // <--- SE MUESTRA EL ERROR REAL AQUÍ
     const grid = document.getElementById('grid');
     if (grid) {
       grid.innerHTML = `
@@ -79,7 +84,6 @@ async function loadData() {
     }
   }
 }
-
 // ==========================================
 // UTILS Y LÓGICA DE JUEGO
 // ==========================================
