@@ -1,8 +1,8 @@
 // ==========================================
 // CONFIGURACIÓN Y ESTADO GLOBAL
 // ==========================================
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbzxYX4Z_CHYolEqfHV2gmEn7S3EVXOPH5lxwZ0l_2l2al-2BoI2Gj4-H9LqrFf1269trg/exec";
-const SHEET_ITEMS_URL = "https://script.google.com/macros/s/AKfycbwTk97kQPad7N0FDonhsABrarDA-OtNsXn5uaeVsLXzFXq5w7rieDO-a89cVbIUeECaLQ/exec"; 
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbygwxrOmbZ1OEm-0zu7eG2VZEUDyZ8rl3aJl_NwgeIlS_jd6avBq2bHH8RNtyVp55nP9A/exec";
+const SHEET_ITEMS_URL = "https://script.google.com/macros/s/AKfycbzpzsmwfa2Wb-16Q_3Km5g-34YSFDL_zj5pyefhWSbHX0m6gyeSTLSrShoN9zVlhu5W-w/exec"; 
 
 let data = { pc: [], mob: [], items: [] };
 let isLoading = true;
