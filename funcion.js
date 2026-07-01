@@ -15,9 +15,6 @@ let rolling = false;
 // ==========================================
 // CARGA DE DATOS (API GOOGLE SHEETS)
 // ==========================================
-// ==========================================
-// CARGA DE DATOS (API GOOGLE SHEETS)
-// ==========================================
 async function loadData() {
   try {
     // Cargamos ambas hojas en paralelo
@@ -118,9 +115,7 @@ function addLogEntry(targetId, htmlContent) {
 // ==========================================
 // RENDERIZADO DE INTERFAZ UI
 // ==========================================
-// ==========================================
-// RENDERIZADO DE INTERFAZ UI (MODIFICADO)
-// ==========================================
+
 function buildCard(i) {
   const isMob = String(i.tipo).toLowerCase().trim() === 'mob' || i.t === 'Mob';
   const isItem = String(i.tipo).toLowerCase().trim() === 'item' || i.t === 'Item' || String(i.tipo).toLowerCase().trim() === 'objeto';
@@ -132,21 +127,39 @@ function buildCard(i) {
   const nombre = i.nombre || 'Sin nombre';
   const escapedName = nombre.replace(/'/g, "\\'");
 
-  // --- NUEVA LÓGICA DE IMAGEN (SOLO LECTURA) ---
-  // Intenta obtener la URL desde la hoja (propiedad i.imagen)
-  // Si no hay URL, muestra un placeholder por defecto
-  const imgSrc = i.imagen ? String(i.imagen).trim() : null;
+  // --- LÓGICA DE IMAGEN CORREGIDA PARA GOOGLE DRIVE ---
+  let rawImgSrc = i.imagen ? String(i.imagen).trim() : null;
+  let imgSrc = null;
+
+  if (rawImgSrc) {
+    // Función para convertir URL de Drive a Direct Link
+    const convertDriveUrl = (url) => {
+      // Patrón para extraer el ID del archivo de Drive
+      // Maneja formatos: /file/d/ID/view, /open?id=ID, /preview?id=ID
+      const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)|id=([a-zA-Z0-9_-]+)/);
+      
+      if (idMatch) {
+        const fileId = idMatch || idMatch;
+        // Retorna la URL directa que permite visualización en <img>
+        return `https://drive.google.com/uc?export=view&id=${fileId}`;
+      }
+      // Si no es Drive, devuelve la URL original (para imágenes externas como imgur, etc.)
+      return url;
+    };
+
+    imgSrc = convertDriveUrl(rawImgSrc);
+  }
   
   let imgHtml = '';
   
   if (imgSrc) {
-    // Si hay URL en la hoja, la mostramos
+    // Si hay URL (ya convertida si era de Drive), la mostramos
     imgHtml = `
       <div class="card-img-wrap">
-        <img class="card-img" src="${imgSrc}" alt="${nombre}" onerror="this.src='https://via.placeholder.com/150?text=Error'">
+        <img class="card-img" src="${imgSrc}" alt="${nombre}" onerror="this.src='https://via.placeholder.com/150?text=Error+Imagen'">
       </div>`;
   } else {
-    // Si no hay imagen en la hoja, mostramos un placeholder estático (sin botón de subir)
+    // Si no hay imagen en la hoja, mostramos un placeholder estático
     imgHtml = `
       <div class="img-placeholder" style="pointer-events: none; opacity: 0.6;">
         <span style="font-size:2rem;">📷</span>
