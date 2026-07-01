@@ -31,10 +31,10 @@ async function loadData() {
     if (!Array.isArray(raw)) raw = Object.values(raw || {});
     
 // Dentro de loadData(), en la parte de mapeo:
-const cleanMain = raw.map(row => {
-  if (!row || typeof row !== 'object') return null;
-  const r = {};
-  Object.keys(row).forEach(k => {
+    const cleanMain = raw.map(row => {
+      if (!row || typeof row !== 'object') return null;
+      const r = {};
+      Object.keys(row).forEach(k => {
     const ck = String(k).toLowerCase().trim().replace(/\s+/g, '');
     r[ck] = row[k];
   });
