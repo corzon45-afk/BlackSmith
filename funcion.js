@@ -89,10 +89,10 @@ function avgDmg(d) {
   const m = String(d).match(/(\d+)d(\d+)([+-]\d+)?/);
   if (!m) return parseInt(d) || 0;
   
-  // CORRECCIÓN: Usar los índices correctos del array de coincidencia
-  // m = cantidad (ej: 2 en "2d6")
-  // m = caras (ej: 6 en "2d6")
-  // m = modificador (ej: "+3" o "-1")
+  // CORRECCIÓN: Extraer los elementos específicos del array de coincidencia
+  // m es la cantidad (ej: "2" en "2d6")
+  // m es las caras (ej: "6" en "2d6")
+  // m es el modificador (ej: "+3" o "-1")
   const count = parseInt(m); 
   const sides = parseInt(m); 
   const modifier = m ? parseInt(m) : 0; 
@@ -141,7 +141,7 @@ function buildCard(i) {
       const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)|id=([a-zA-Z0-9_-]+)/);
       
       if (idMatch) {
-        // CORRECCIÓN: Extraer el ID correcto del array, no el array entero
+        // CORRECCIÓN: Extraer el ID correcto del array (índice 1 o 2), no el array entero
         const fileId = idMatch || idMatch;
         if (fileId) {
           return `https://drive.google.com/uc?export=view&id=${fileId}`;
