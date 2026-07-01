@@ -13,53 +13,6 @@ let selDie = 20;
 let rolling = false;
 
 // ==========================================
-// GESTIÓN DE IMÁGENES (LOCALSTORAGE)
-// ==========================================
-function getStoredImages() {
-  try { 
-    return JSON.parse(localStorage.getItem('dnd_images') || '{}'); 
-  } catch { 
-    return {}; 
-  }
-}
-
-function saveImage(nombre, dataURL) {
-  const imgs = getStoredImages();
-  imgs[nombre] = dataURL;
-  localStorage.setItem('dnd_images', JSON.stringify(imgs));
-}
-
-function removeImage(nombre) {
-  const imgs = getStoredImages();
-  delete imgs[nombre];
-  localStorage.setItem('dnd_images', JSON.stringify(imgs));
-}
-
-function triggerUpload(nombre) {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.onchange = e => {
-    // CORRECCIÓN: Acceder al primer archivo 
-const file = e.target.files; // Acceder al primer archivo explícitamente
-if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = ev => {
-      saveImage(nombre, ev.target.result);
-      render();
-    };
-    reader.readAsDataURL(file);
-  };
-  input.click();
-}
-
-function handleRemoveImage(nombre) {
-  removeImage(nombre);
-  render();
-}
-
-// ==========================================
 // CARGA DE DATOS (API GOOGLE SHEETS)
 // ==========================================
 async function loadData() {
@@ -77,16 +30,17 @@ async function loadData() {
     let raw = await resMain.json();
     if (!Array.isArray(raw)) raw = Object.values(raw || {});
     
-    const cleanMain = raw.map(row => {
-      if (!row || typeof row !== 'object') return null;
-      const r = {};
-      Object.keys(row).forEach(k => {
-        const ck = String(k).toLowerCase().trim().replace(/\s+/g, '');
-        r[ck] = row[k];
-      });
-      return r;
-    }).filter(Boolean);
-
+// Dentro de loadData(), en la parte de mapeo:
+const cleanMain = raw.map(row => {
+  if (!row || typeof row !== 'object') return null;
+  const r = {};
+  Object.keys(row).forEach(k => {
+    const ck = String(k).toLowerCase().trim().replace(/\s+/g, '');
+    r[ck] = row[k];
+  });
+  return r;
+}).filter(Boolean);
+// Ahora 'r' tendrá una propiedad 'r.imagen' si la columna en el sheet se llama "imagen"
     data.pc = cleanMain.filter(i => String(i.tipo).toLowerCase().trim() === 'pc');
     data.mob = cleanMain.filter(i => String(i.tipo).toLowerCase().trim() === 'mob');
 
@@ -160,6 +114,9 @@ function addLogEntry(targetId, htmlContent) {
 // ==========================================
 // RENDERIZADO DE INTERFAZ UI
 // ==========================================
+// ==========================================
+// RENDERIZADO DE INTERFAZ UI (MODIFICADO)
+// ==========================================
 function buildCard(i) {
   const isMob = String(i.tipo).toLowerCase().trim() === 'mob' || i.t === 'Mob';
   const isItem = String(i.tipo).toLowerCase().trim() === 'item' || i.t === 'Item' || String(i.tipo).toLowerCase().trim() === 'objeto';
@@ -169,14 +126,29 @@ function buildCard(i) {
   const pct = Math.max(0, Math.min(1, pv / maxpv));
   
   const nombre = i.nombre || 'Sin nombre';
-  const imgs = getStoredImages();
-  const imgSrc = imgs[nombre];
   const escapedName = nombre.replace(/'/g, "\\'");
 
-  // Lógica de imagen
-  let imgHtml = imgSrc 
-    ? `<div class="card-img-wrap"><img class="card-img" src="${imgSrc}"><div class="img-overlay"><button class="img-btn change" onclick="triggerUpload('${escapedName}')">🖼 Cambiar</button><button class="img-btn remove" onclick="handleRemoveImage('${escapedName}')">✕</button></div></div>`
-    : `<div class="img-placeholder" onclick="triggerUpload('${escapedName}')"><span style="font-size:2rem;">📷</span><span>Click para agregar imagen</span></div>`;
+  // --- NUEVA LÓGICA DE IMAGEN (SOLO LECTURA) ---
+  // Intenta obtener la URL desde la hoja (propiedad i.imagen)
+  // Si no hay URL, muestra un placeholder por defecto
+  const imgSrc = i.imagen ? String(i.imagen).trim() : null;
+  
+  let imgHtml = '';
+  
+  if (imgSrc) {
+    // Si hay URL en la hoja, la mostramos
+    imgHtml = `
+      <div class="card-img-wrap">
+        <img class="card-img" src="${imgSrc}" alt="${nombre}" onerror="this.src='https://via.placeholder.com/150?text=Error'">
+      </div>`;
+  } else {
+    // Si no hay imagen en la hoja, mostramos un placeholder estático (sin botón de subir)
+    imgHtml = `
+      <div class="img-placeholder" style="pointer-events: none; opacity: 0.6;">
+        <span style="font-size:2rem;">📷</span>
+        <span>Sin imagen</span>
+      </div>`;
+  }
 
   // Badge de tipo
   let badgeClass = 'pc';
@@ -186,8 +158,11 @@ function buildCard(i) {
   
   const badge = `<span class="badge ${badgeClass}">${badgeText}</span>`;
 
+  // ... (El resto de la lógica de items, stats, etc. se mantiene igual) ...
+  
   // --- LÓGICA ESPECÍFICA PARA ITEMS ---
   if (isItem) {
+    // ... (Código de items igual que el original) ...
     const naturaleza = i.naturaleza || '—';
     const efecto = i.efecto || '—';
     const descripcion = i.descripcion || '—';
@@ -216,11 +191,9 @@ function buildCard(i) {
     `;
   }
 
-  // --- LÓGICA ORIGINAL PARA PC/Monstruo ---
-  // --- LÓGICA ACTUALIZADA PARA PC/Monstruo ---
+  // --- LÓGICA PARA PC/Monstruo ---
   const hpBar = `<div class="hp-wrap"><div class="hp-label"><span>HP</span><span>${pv} / ${maxpv}</span></div><div class="hp-bar-bg"><div class="hp-bar-fill" style="width:${Math.round(pct * 100)}%;background:${hpColor(pct)};"></div></div></div>`;
 
-  // Detectar valores de Oro y XP (busca en varias posibles claves de la hoja)
   const oro = i.oro || i.gold || i.oros || 0;
   const xp = i.xp || i.experiencia || 0;
 
@@ -230,7 +203,7 @@ function buildCard(i) {
     <div class="stat-row"><span>Ataque</span><span>+${i.atk || 0}</span></div>
     <div class="stat-row"><span>Daño (prom.)</span><span>${avgDmg(i.dmg)} (${i.dmg || '1d6'})</span></div>
     ${xp ? `<div class="stat-row"><span>XP</span><span>${xp}</span></div>` : ''}
-    ${oro ? `<div class="stat-row"><span>Oro</span><span>💰 ${oro}</span></div>` : ''}`; // Nueva línea para Oro
+    ${oro ? `<div class="stat-row"><span>Oro</span><span>💰 ${oro}</span></div>` : ''}`;
 
   let attrs = '';
   if (!isMob) {
