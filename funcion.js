@@ -89,15 +89,17 @@ function avgDmg(d) {
   const m = String(d).match(/(\d+)d(\d+)([+-]\d+)?/);
   if (!m) return parseInt(d) || 0;
   
-// CORRECCIÓN: Usar los índices 1, 2 y 3 del array de coincidencia
-const count = parseInt(m); 
-const sides = parseInt(m); 
-const modifier = parseInt(m) || 0; 
+  // CORRECCIÓN: Usar los índices correctos del array de coincidencia
+  // m = cantidad (ej: 2 en "2d6")
+  // m = caras (ej: 6 en "2d6")
+  // m = modificador (ej: "+3" o "-1")
+  const count = parseInt(m); 
+  const sides = parseInt(m); 
+  const modifier = m ? parseInt(m) : 0; 
   
   // Fórmula: Cantidad * (Caras + 1) / 2 + Modificador
   return Math.round(count * (sides + 1) / 2 + modifier);
 }
-
 function hpColor(p) { 
   return p > 0.6 ? '#4caf50' : p > 0.3 ? '#ff9800' : '#ef5350'; 
 }
@@ -127,23 +129,25 @@ function buildCard(i) {
   const nombre = i.nombre || 'Sin nombre';
   const escapedName = nombre.replace(/'/g, "\\'");
 
-  // --- LÓGICA DE IMAGEN CORREGIDA PARA GOOGLE DRIVE ---
+  // --- LÓGICA DE IMAGEN CORREGIDA ---
   let rawImgSrc = i.imagen ? String(i.imagen).trim() : null;
   let imgSrc = null;
 
   if (rawImgSrc) {
     // Función para convertir URL de Drive a Direct Link
     const convertDriveUrl = (url) => {
-      // Patrón para extraer el ID del archivo de Drive
-      // Maneja formatos: /file/d/ID/view, /open?id=ID, /preview?id=ID
+      // Intenta extraer el ID. Soporta: /d/ID/view, /open?id=ID, /preview?id=ID
+      // El regex captura el ID en el grupo 1 o 2
       const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)|id=([a-zA-Z0-9_-]+)/);
       
       if (idMatch) {
+        // CORRECCIÓN: Extraer el ID correcto del array, no el array entero
         const fileId = idMatch || idMatch;
-        // Retorna la URL directa que permite visualización en <img>
-        return `https://drive.google.com/uc?export=view&id=${fileId}`;
+        if (fileId) {
+          return `https://drive.google.com/uc?export=view&id=${fileId}`;
+        }
       }
-      // Si no es Drive, devuelve la URL original (para imágenes externas como imgur, etc.)
+      // Si no es Drive o falla, devuelve la URL original (para imgur, etc.)
       return url;
     };
 
@@ -175,11 +179,8 @@ function buildCard(i) {
   
   const badge = `<span class="badge ${badgeClass}">${badgeText}</span>`;
 
-  // ... (El resto de la lógica de items, stats, etc. se mantiene igual) ...
-  
   // --- LÓGICA ESPECÍFICA PARA ITEMS ---
   if (isItem) {
-    // ... (Código de items igual que el original) ...
     const naturaleza = i.naturaleza || '—';
     const efecto = i.efecto || '—';
     const descripcion = i.descripcion || '—';
