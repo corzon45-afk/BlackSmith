@@ -16,6 +16,9 @@ let rolling = false;
 // ==========================================
 // CARGA DE DATOS (API GOOGLE SHEETS)
 // ==========================================
+// ==========================================
+// CARGA DE DATOS (API GOOGLE SHEETS) - CORREGIDA
+// ==========================================
 async function loadData() {
   try {
     // Cargamos ambas hojas en paralelo
@@ -24,19 +27,41 @@ async function loadData() {
       fetch(SHEET_ITEMS_URL)
     ]);
 
+    // 1. Verificar si la petición fue exitosa (HTTP 200)
     if (!resMain.ok) throw new Error(`HTTP ${resMain.status} (Datos)`);
     if (!resItems.ok) throw new Error(`HTTP ${resItems.status} (Items)`);
-    
-    // Procesar Datos Principales (PC/Mob)
+
+    // 2. Verificar el tipo de contenido antes de parsear JSON
+    // Si Google devuelve una página de error HTML, el Content-Type será text/html
+    const contentTypeMain = resMain.headers.get("content-type");
+    const contentTypeItems = resItems.headers.get("content-type");
+
+    if (!contentTypeMain || !contentTypeMain.includes("application/json")) {
+      const text = await resMain.text();
+      console.error("La respuesta del servidor NO es JSON. Recibido:", text.substring(0, 200));
+      throw new Error("El servidor devolvió HTML en lugar de JSON. Verifica que el Script de Google esté desplegado como 'Cualquier persona'.");
+    }
+    if (!contentTypeItems || !contentTypeItems.includes("application/json")) {
+      const text = await resItems.text();
+      console.error("La respuesta de Items NO es JSON. Recibido:", text.substring(0, 200));
+      throw new Error("El servidor de Items devolvió HTML. Verifica la implementación.");
+    }
+
+    // 3. Ahora sí, parsear como JSON
     let raw = await resMain.json();
-    if (!Array.isArray(raw)) raw = Object.values(raw || {});
     
-    // CORRECCIÓN: Limpieza del mapeo para asegurar que se lea la columna 'imagen'
+    // Si la respuesta viene envuelta en un objeto { data: [...] }, extraer el array
+    if (raw && Array.isArray(raw.data)) {
+      raw = raw.data;
+    } else if (!Array.isArray(raw)) {
+      raw = Object.values(raw || {});
+    }
+
+    // Procesar Datos Principales (PC/Mob)
     const cleanMain = raw.map(row => {
       if (!row || typeof row !== 'object') return null;
       const r = {};
       Object.keys(row).forEach(k => {
-        // Normaliza la clave: minúsculas, sin espacios, sin guiones bajos extra
         const ck = String(k).toLowerCase().trim().replace(/\s+/g, '');
         r[ck] = row[k];
       });
@@ -48,7 +73,11 @@ async function loadData() {
 
     // Procesar Datos de Items
     let rawItems = await resItems.json();
-    if (!Array.isArray(rawItems)) rawItems = Object.values(rawItems || {});
+    if (rawItems && Array.isArray(rawItems.data)) {
+      rawItems = rawItems.data;
+    } else if (!Array.isArray(rawItems)) {
+      rawItems = Object.values(rawItems || {});
+    }
 
     const cleanItems = rawItems.map(row => {
       if (!row || typeof row !== 'object') return null;
@@ -60,24 +89,24 @@ async function loadData() {
       return r;
     }).filter(Boolean);
 
-    // Filtrar solo los que sean 'item' o 'objeto'
     data.items = cleanItems.filter(i => 
       String(i.tipo).toLowerCase().trim() === 'item' || 
       String(i.tipo).toLowerCase().trim() === 'objeto'
     );
     
     isLoading = false;
-    console.log("Datos cargados:", data); // <--- AGREGADO PARA DEPURAR
+    console.log("Datos cargados correctamente:", { pc: data.pc.length, mob: data.mob.length, items: data.items.length });
     render();
+
   } catch (e) {
     isLoading = false;
-    console.error("Error cargando las APIs:", e); // <--- SE MUESTRA EL ERROR REAL AQUÍ
+    console.error("Error cargando las APIs:", e);
     const grid = document.getElementById('grid');
     if (grid) {
       grid.innerHTML = `
         <div class="empty-msg" style="color:#ef5350;">
-          Aviso: No se pudieron sincronizar los datos. <br>
-          <small>${e.message}</small>
+          <strong>Error de conexión:</strong> ${e.message} <br>
+          <small>Revisa la consola (F12) para más detalles.</small>
         </div>`;
     }
   }
