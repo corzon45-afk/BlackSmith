@@ -2,8 +2,8 @@
 // CONFIGURACIÓN Y ESTADO GLOBAL
 // ==========================================
 // Usamos un proxy para evitar el bloqueo CORS de Google
-const SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent("https://script.google.com/macros/s/AKfycbzCzI16DB4vPA8gPJMHqf3_AjncGls_EuCf_XmQt6Egs_QcrZ7BLrUF6b2BJHmoE1z6ag/exec");
-const SHEET_ITEMS_URL = "https://corsproxy.io/?" + encodeURIComponent("https://script.google.com/macros/s/AKfycbxbVcMVOo86YfMwIfPVpWg5zyEUcyrkWblWribHfN5eYTdLoaLA5j7gnvi2T2_okmwi_A/exec"); 
+const SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent("https://script.google.com/macros/s/AKfycbxTecs3AzruyHK2FC3L0vwDepGRTeQggjiA1cFWxqL6pGIZSIVNsWzybS2DAPa5sQdyJQ/exec");
+const SHEET_ITEMS_URL = "https://corsproxy.io/?" + encodeURIComponent("https://script.google.com/macros/s/AKfycbzTMyJ0OQBktYoULZXanPLfqXuPGa8zg_MAGgtwADwaPFqDWIwQYrnm72g_0hllnGlt0A/exec"); 
 
 let data = { pc: [], mob: [], items: [] };
 let isLoading = true;
