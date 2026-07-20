@@ -2,8 +2,8 @@
 // CONFIGURACIÓN Y ESTADO GLOBAL
 // ==========================================
 // Usamos un proxy para evitar el bloqueo CORS de Google
-const SHEET_URL = "https://corsproxy.io/?" + encodeURIComponent("https://script.google.com/macros/s/AKfycbxTecs3AzruyHK2FC3L0vwDepGRTeQggjiA1cFWxqL6pGIZSIVNsWzybS2DAPa5sQdyJQ/exec");
-const SHEET_ITEMS_URL = "https://corsproxy.io/?" + encodeURIComponent("https://script.google.com/macros/s/AKfycbzTMyJ0OQBktYoULZXanPLfqXuPGa8zg_MAGgtwADwaPFqDWIwQYrnm72g_0hllnGlt0A/exec"); 
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxTecs3AzruyHK2FC3L0vwDepGRTeQggjiA1cFWxqL6pGIZSIVNsWzybS2DAPa5sQdyJQ/exec";
+const SHEET_ITEMS_URL = "https://script.google.com/macros/s/AKfycbzTMyJ0OQBktYoULZXanPLfqXuPGa8zg_MAGgtwADwaPFqDWIwQYrnm72g_0hllnGlt0A/exec"; 
 
 let data = { pc: [], mob: [], items: [] };
 let isLoading = true;
@@ -28,11 +28,6 @@ async function loadData() {
     // Intentamos primero sin proxy para ver si Google lo permite directamente
     const rawMainUrl = "https://script.google.com/macros/s/AKfycbzCzI16DB4vPA8gPJMHqf3_AjncGls_EuCf_XmQt6Egs_QcrZ7BLrUF6b2BJHmoE1z6ag/exec";
     const rawItemsUrl = "https://script.google.com/macros/s/AKfycbxbVcMVOo86YfMwIfPVpWg5zyEUcyrkWblWribHfN5eYTdLoaLA5j7gnvi2T2_okmwi_A/exec";
-
-    // Opción A: Intentar fetch directo (a veces funciona si el script es público real)
-    // Opción B: Usar el proxy si la A falla. Aquí usamos el proxy como base pero con mejor manejo de errores.
-    
-    const fetchWithProxy = (url) => fetch("https://corsproxy.io/?" + encodeURIComponent(url));
 
     // Intentamos cargar ambas
     const [resMain, resItems] = await Promise.allSettled([
@@ -223,8 +218,56 @@ function addLogEntry(targetId, htmlContent) {
 }
 
 // ==========================================
-// RENDERIZADO DE INTERFAZ UI
 // ==========================================
+// RENDERIZADO DE INTERFAZ UI (VERSIÓN ORIGINAL LOCALSTORAGE)
+// ==========================================
+
+// Funciones auxiliares para LocalStorage (Necesarias para que funcione)
+function getStoredImages() {
+  try { 
+    return JSON.parse(localStorage.getItem('dnd_images') || '{}'); 
+  } catch { 
+    return {}; 
+  }
+}
+
+function saveImage(nombre, dataURL) {
+  const imgs = getStoredImages();
+  imgs[nombre] = dataURL;
+  localStorage.setItem('dnd_images', JSON.stringify(imgs));
+}
+
+function removeImage(nombre) {
+  const imgs = getStoredImages();
+  delete imgs[nombre];
+  localStorage.setItem('dnd_images', JSON.stringify(imgs));
+}
+
+function triggerUpload(nombre) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = e => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const file = files[0]; // Acceder al primer archivo
+    const reader = new FileReader();
+    reader.onload = ev => {
+      saveImage(nombre, ev.target.result);
+      render();
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function handleRemoveImage(nombre) {
+  removeImage(nombre);
+  render();
+}
+
+// --- FIN DE FUNCIONES AUXILIARES ---
 
 function buildCard(i) {
   const isMob = String(i.tipo).toLowerCase().trim() === 'mob' || i.t === 'Mob';
@@ -235,49 +278,23 @@ function buildCard(i) {
   const pct = Math.max(0, Math.min(1, pv / maxpv));
   
   const nombre = i.nombre || 'Sin nombre';
+  const imgs = getStoredImages();
+  const imgSrc = imgs[nombre]; // <--- AQUÍ ESTÁ EL CAMBIO: Busca en localStorage
   const escapedName = nombre.replace(/'/g, "\\'");
 
-  // --- LÓGICA DE IMAGEN CORREGIDA ---
-  let rawImgSrc = i.imagen ? String(i.imagen).trim() : null;
-  let imgSrc = null;
-
-  if (rawImgSrc) {
-    // Función para convertir URL de Drive a Direct Link
-    const convertDriveUrl = (url) => {
-      // Intenta extraer el ID. Soporta: /d/ID/view, /open?id=ID, /preview?id=ID
-      // El regex captura el ID en el grupo 1 o 2
-      const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)|id=([a-zA-Z0-9_-]+)/);
-      
-      if (idMatch) {
-        // CORRECCIÓN: Extraer el ID correcto del array (índice 1 o 2), no el array entero
-        const fileId = idMatch || idMatch;
-        if (fileId) {
-          return `https://drive.google.com/uc?export=view&id=${fileId}`;
-        }
-      }
-      // Si no es Drive o falla, devuelve la URL original (para imgur, etc.)
-      return url;
-    };
-
-    imgSrc = convertDriveUrl(rawImgSrc);
-  }
-  
-  let imgHtml = '';
-  
-  if (imgSrc) {
-    // Si hay URL (ya convertida si era de Drive), la mostramos
-    imgHtml = `
-      <div class="card-img-wrap">
-        <img class="card-img" src="${imgSrc}" alt="${nombre}" onerror="this.src='https://via.placeholder.com/150?text=Error+Imagen'">
-      </div>`;
-  } else {
-    // Si no hay imagen en la hoja, mostramos un placeholder estático
-    imgHtml = `
-      <div class="img-placeholder" style="pointer-events: none; opacity: 0.6;">
+  // Lógica de imagen (Original con botones de subir/borrar)
+  let imgHtml = imgSrc 
+    ? `<div class="card-img-wrap">
+        <img class="card-img" src="${imgSrc}">
+        <div class="img-overlay">
+          <button class="img-btn change" onclick="triggerUpload('${escapedName}')">🖼 Cambiar</button>
+          <button class="img-btn remove" onclick="handleRemoveImage('${escapedName}')">✕</button>
+        </div>
+       </div>`
+    : `<div class="img-placeholder" onclick="triggerUpload('${escapedName}')">
         <span style="font-size:2rem;">📷</span>
-        <span>Sin imagen</span>
-      </div>`;
-  }
+        <span>Click para agregar imagen</span>
+       </div>`;
 
   // Badge de tipo
   let badgeClass = 'pc';
