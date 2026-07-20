@@ -3,7 +3,7 @@
 // ==========================================
 // Usamos un proxy para evitar el bloqueo CORS de Google
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbzFcXx9Pckvnnb4E3DsIfcaePkemJa4s9LnpBdZc8YcV4NzTYg2viVudu6kPBv8AMZhGg/exec";
-const SHEET_ITEMS_URL = "https://script.google.com/macros/s/AKfycbyvguBvqH8xDdjSQK_LCjwUFBqse_rEKMgHFw9ObzrDQUr-icXAn-MM8ImcwFwOuw9BAg/exec"; 
+const SHEET_ITEMS_URL = "https://script.google.com/macros/s/AKfycbzMYd3v1bGqSw8C1f5CC5VyXGRUIVsz2LlF4EKx9A1qm5b6ylCDeyzbGeI5KfxBwXkT6A/exec"; 
 
 let data = { pc: [], mob: [], items: [] };
 let isLoading = true;
