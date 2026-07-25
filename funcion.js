@@ -644,10 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildDiceGrid(); 
   buildArena(); 
   loadData();
-  
-  // --- AGREGA ESTA LÍNEA AQUÍ ---
   initGlobalNotesPanel(); 
-  // -------------------------------
 
   document.getElementById('search')?.addEventListener('input', render);
   document.getElementById('type')?.addEventListener('change', render);
