@@ -137,3 +137,61 @@
     .spinning      { animation: spinRoll  1s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
     .poly-spinning { animation: polyPulse 1s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
   
+/* Estilos para el Panel de Notas Global */
+.global-notes-panel {
+  background: #2c2c2c; /* Fondo oscuro para combinar con tu tema */
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 15px; /* Espacio antes del buscador */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.notes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  color: #e0e0e0;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.notes-header button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #ef5350;
+  transition: color 0.2s;
+}
+
+.notes-header button:hover {
+  color: #ff5252;
+}
+
+#globalNotesArea {
+  width: 100%;
+  height: 80px;
+  background: #1e1e1e;
+  border: 1px solid #555;
+  border-radius: 4px;
+  color: #fff;
+  padding: 8px;
+  font-family: monospace; /* Fuente monoespaciada para notas */
+  font-size: 0.9rem;
+  resize: vertical; /* Permite cambiar el tamaño verticalmente */
+  box-sizing: border-box; /* Asegura que el padding no rompa el ancho */
+}
+
+#globalNotesArea:focus {
+  outline: none;
+  border-color: #c3073f; /* Color de acento de tu tema */
+}
+
+.notes-footer {
+  text-align: right;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #888;
+}
