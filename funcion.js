@@ -657,4 +657,4 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', e => { 
     if (e.key === 'Enter') rollDice(); 
   });
-});
+}); // <--- Asegúrate de que esto también esté presente al final del archivo
