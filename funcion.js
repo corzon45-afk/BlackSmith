@@ -484,21 +484,23 @@ function rollAttack() {
   let dmgRoll = 0;
 
   if (hit) {
-    // Dentro de rollAttack, donde se calcula el daño:
-const m = String(dmg).match(/(\d+)d(\d+)([+-]\d+)?/);
-if (m) {
-  const count = parseInt(m[1]);
-  const sides = parseInt(m[2]);
-  const mod = m[3] ? parseInt(m[3]) : 0;
-  
-  const totalDice = count * (crit ? 2 : 1); // Doblar solo los dados, no el modificador (regla estándar D&D)
-  
-  let dmgRoll = 0;
-  for (let i = 0; i < totalDice; i++) {
-    dmgRoll += Math.ceil(Math.random() * sides);
-  }
-  dmgRoll += mod; // Sumar el modificador una sola vez
-}
+    const m = String(dmg).match(/(\d+)d(\d+)([+-]\d+)?/);
+    if (m) {
+      const count = parseInt(m[1]);
+      const sides = parseInt(m[2]);
+      const mod = m[3] ? parseInt(m[3]) : 0;
+      
+      const totalDice = count * (crit ? 2 : 1); // Doblar solo los dados
+      
+      let dmgRoll = 0;
+      for (let i = 0; i < totalDice; i++) {
+        dmgRoll += Math.ceil(Math.random() * sides);
+      }
+      dmgRoll += mod; // Sumar el modificador una sola vez
+    } else {
+      dmgRoll = parseInt(dmg) || 0;
+    }
+  } 
 
   let logHtml = '';
   if (crit) {
@@ -511,7 +513,6 @@ if (m) {
   
   addLogEntry('combatLog', logHtml);
 }
-
 // ==========================================
 // SISTEMA DE DADOS 3D Y ARENA (SVG)
 // ==========================================
