@@ -645,6 +645,10 @@ document.addEventListener('DOMContentLoaded', () => {
   buildArena(); 
   loadData();
   
+  // --- AGREGA ESTA LÍNEA AQUÍ ---
+  initGlobalNotesPanel(); 
+  // -------------------------------
+
   document.getElementById('search')?.addEventListener('input', render);
   document.getElementById('type')?.addEventListener('change', render);
   document.getElementById('btnAttack')?.addEventListener('click', rollAttack);
@@ -656,4 +660,4 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', e => { 
     if (e.key === 'Enter') rollDice(); 
   });
-}); // <--- Asegúrate de que esto también esté presente al final del archivo
+});
