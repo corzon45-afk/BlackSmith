@@ -118,16 +118,15 @@ async function loadData() {
 // ==========================================
 function avgDmg(d) {
   if (!d) return 0;
+  // El regex debe capturar grupos: (cantidad)d(caras)(modificador)
   const m = String(d).match(/(\d+)d(\d+)([+-]\d+)?/);
+  
   if (!m) return parseInt(d) || 0;
   
-  // CORRECCIÓN: Extraer los elementos específicos del array de coincidencia
-  // m es la cantidad (ej: "2" en "2d6")
-  // m es las caras (ej: "6" en "2d6")
-  // m es el modificador (ej: "+3" o "-1")
-  const count = parseInt(m); 
-  const sides = parseInt(m); 
-  const modifier = m ? parseInt(m) : 0; 
+  // CORRECCIÓN: Acceder a los grupos específicos
+  const count = parseInt(m[1]);       // Ej: 2 en "2d6"
+  const sides = parseInt(m[2]);       // Ej: 6 en "2d6"
+  const modifier = m[3] ? parseInt(m[3]) : 0; // Ej: +3 o -1
   
   // Fórmula: Cantidad * (Caras + 1) / 2 + Modificador
   return Math.round(count * (sides + 1) / 2 + modifier);
@@ -195,7 +194,81 @@ function handleRemoveImage(nombre) {
   removeImage(nombre);
   render();
 }
+// ==========================================
+// SISTEMA DE NOTAS GLOBALES (BITÁCORA DE PARTIDA)
+// ==========================================
+const GLOBAL_NOTE_KEY = 'dnd_global_notes';
 
+function getGlobalNote() {
+  try {
+    return localStorage.getItem(GLOBAL_NOTE_KEY) || '';
+  } catch (e) {
+    console.error("Error leyendo notas globales:", e);
+    return '';
+  }
+}
+
+function saveGlobalNote(text) {
+  try {
+    localStorage.setItem(GLOBAL_NOTE_KEY, text);
+    // Opcional: Mostrar una pequeña notificación de "Guardado"
+    console.log("Nota guardada correctamente.");
+  } catch (e) {
+    console.error("Error guardando nota (¿Lleno el localStorage?):", e);
+    alert("Error: No se pudo guardar la nota. El almacenamiento local podría estar lleno.");
+  }
+}
+
+function clearGlobalNote() {
+  if(confirm("¿Estás seguro de borrar todas las notas de la partida?")) {
+    localStorage.removeItem(GLOBAL_NOTE_KEY);
+    render(); // Re-renderizar para limpiar la vista
+  }
+}
+
+// Función para inicializar el panel de notas en el DOM
+function initGlobalNotesPanel() {
+  // Buscamos el contenedor principal o creamos el panel si no existe
+  // Asumiremos que el usuario tiene un ID 'header' o similar donde va el logo
+  // Si no, lo inyectamos dinámicamente antes del buscador
+  
+  const searchInput = document.getElementById('search');
+  if (!searchInput) return;
+
+  // Creamos el contenedor del panel
+  const panel = document.createElement('div');
+  panel.id = 'globalNotesPanel';
+  panel.className = 'global-notes-panel';
+  
+  panel.innerHTML = `
+    <div class="notes-header">
+      <span>📝 Bitácora de Partida</span>
+      <button id="btnClearNotes" class="btn-clear-notes" title="Borrar nota">🗑️</button>
+    </div>
+    <textarea id="globalNotesArea" placeholder="Escribe aquí tus apuntes, decisiones importantes o el resumen de la partida..."></textarea>
+    <div class="notes-footer">
+      <small>Se guarda automáticamente al escribir.</small>
+    </div>
+  `;
+
+  // Insertamos el panel ANTES del buscador
+  searchInput.parentNode.insertBefore(panel, searchInput);
+
+  // Lógica del textarea
+  const textArea = document.getElementById('globalNotesArea');
+  const clearBtn = document.getElementById('btnClearNotes');
+
+  // Cargar nota existente
+  textArea.value = getGlobalNote();
+
+  // Guardar al escribir (evento input)
+  textArea.addEventListener('input', (e) => {
+    saveGlobalNote(e.target.value);
+  });
+
+  // Botón borrar
+  clearBtn.addEventListener('click', clearGlobalNote);
+}
 // --- FIN DE FUNCIONES AUXILIARES ---
 
 function buildCard(i) {
@@ -411,15 +484,21 @@ function rollAttack() {
   let dmgRoll = 0;
 
   if (hit) {
-    const m = String(dmg).match(/(\d+)d(\d+)([+-]\d+)?/);
-    if (m) {
-      const dice = parseInt(m) * (crit ? 2 : 1);
-      for (let i = 0; i < dice; i++) dmgRoll += Math.ceil(Math.random() * parseInt(m));
-      dmgRoll += parseInt(m) || 0;
-    } else {
-      dmgRoll = parseInt(dmg) || 0;
-    }
+    // Dentro de rollAttack, donde se calcula el daño:
+const m = String(dmg).match(/(\d+)d(\d+)([+-]\d+)?/);
+if (m) {
+  const count = parseInt(m[1]);
+  const sides = parseInt(m[2]);
+  const mod = m[3] ? parseInt(m[3]) : 0;
+  
+  const totalDice = count * (crit ? 2 : 1); // Doblar solo los dados, no el modificador (regla estándar D&D)
+  
+  let dmgRoll = 0;
+  for (let i = 0; i < totalDice; i++) {
+    dmgRoll += Math.ceil(Math.random() * sides);
   }
+  dmgRoll += mod; // Sumar el modificador una sola vez
+}
 
   let logHtml = '';
   if (crit) {
